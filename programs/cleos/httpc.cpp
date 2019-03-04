@@ -180,6 +180,7 @@ namespace eosio { namespace client { namespace http {
    }
 
    fc::variant do_http_call( const connection_param& cp,
+                             const string& method,
                              const fc::variant& postdata,
                              bool print_request,
                              bool print_response ) {
@@ -193,7 +194,7 @@ namespace eosio { namespace client { namespace http {
    boost::asio::streambuf request;
    std::ostream request_stream(&request);
    auto host_header_value = format_host_header(url);
-   request_stream << "POST " << url.path << " HTTP/1.0\r\n";
+   request_stream << method << " " << url.path << " HTTP/1.0\r\n";
    request_stream << "Host: " << host_header_value << "\r\n";
    request_stream << "content-length: " << postjson.size() << "\r\n";
    request_stream << "Accept: */*\r\n";
