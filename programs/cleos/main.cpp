@@ -1850,6 +1850,20 @@ void get_account( const string& accountName, const string& coresym, bool json_fo
    }
 }
 
+void get_creator( const string& name ) {
+
+    fc::variant json = call(get_creator_func + "?account=" + name);
+
+    std::cout << std::endl;
+    if ( !json["creator"].is_null() ) {
+        std::cout << "  Creator: " << json["creator"].as_string()   << std::endl;
+        std::cout << "  Date: "    << json["timestamp"].as_string() << std::endl;
+    } else {
+        std::cout << "Could not find creator" << std::endl;
+    }
+    std::cout << std::endl;
+}
+
 CLI::callback_t header_opt_callback = [](CLI::results_t res) {
    vector<string>::iterator itr;
 
@@ -2044,6 +2058,11 @@ int main( int argc, char** argv ) {
    getAccount->add_option("core-symbol", coresym, localized("The expected core symbol of the chain you are querying"));
    getAccount->add_flag("--json,-j", print_json, localized("Output in JSON format") );
    getAccount->set_callback([&]() { get_account(accountName, coresym, print_json); });
+
+   // get creator
+   auto getCreator = get->add_subcommand("creator", localized("Retrieve the creator of an account from the blockchain"), false);
+   getCreator->add_option("name", accountName, localized("The name of the account"))->required();
+   getCreator->set_callback([&]() { get_creator(accountName); });
 
    // get code
    string codeFilename;
