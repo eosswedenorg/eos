@@ -245,10 +245,11 @@ vector<chain::permission_level> get_account_permissions(const vector<string>& pe
 template<typename T>
 fc::variant call( const std::string& url,
                   const std::string& path,
-                  const T& v ) {
+                  const T& v,
+                  bool is_get = false) {
    try {
       auto sp = std::make_unique<eosio::client::http::connection_param>(context, parse_url(url) + path, no_verify ? false : true, headers);
-      return eosio::client::http::do_http_call(*sp, fc::variant(v), print_request, print_response );
+      return eosio::client::http::do_http_call(*sp, is_get ? "GET" : "POST", fc::variant(v), print_request, print_response );
    }
    catch(boost::system::system_error& e) {
       if(url == ::url)
@@ -259,6 +260,7 @@ fc::variant call( const std::string& url,
    }
 }
 
+fc::variant call( const std::string& path) { return call( url, path, fc::variant(), true ); }
 template<typename T>
 fc::variant call( const std::string& path,
                   const T& v ) { return call( url, path, fc::variant(v) ); }
