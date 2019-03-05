@@ -111,6 +111,7 @@ namespace eosio { namespace client { namespace http {
 
    // v2
    const string get_creator_func = "/v2/history/get_creator";
+   const string get_transacted_accounts_func = "/v2/history/get_transacted_accounts";
 
    const string net_func_base = "/v1/net";
    const string net_connect = net_func_base + "/connect";
