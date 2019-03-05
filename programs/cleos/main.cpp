@@ -2305,6 +2305,94 @@ void get_creator( const string& name ) {
     std::cout << std::endl;
 }
 
+static void print_transacted_accounts_table(string prefix, const fc::variants& table, const fc::variant& total) {
+
+    std::cout << prefix << std::endl;
+    std::cout << "+---------------+------------+----------------------+----------------------+" << std::endl;
+    std::cout << "| Account       | Transfers  | Sum                  | Average              |" << std::endl;
+    std::cout << "+---------------+------------+----------------------+----------------------+" << std::endl;
+    if ( !table.empty() ) {
+        for ( auto& row : table ) {
+            const auto& obj = row.get_object();
+
+            printf("| %-13.13s | %10li | %-20.4f | %-20.4f |\n",
+                  obj["account"].as_string().c_str(),
+                  obj["transfers"].as_int64(),
+                  obj["sum"].as_double(),
+                  obj["average"].as_double());
+        }
+    } else {
+        std::cout << "| -             | -          | -                    | -                    |" << std::endl;
+    }
+
+    std::cout << "+---------------+------------+----------------------+----------------------+" << std::endl;
+    std::cout << "Total: " << total.as_string() << std::endl;
+
+    std::cout << std::endl;
+}
+
+struct get_transacted_accounts_subcommand {
+   string account;
+   string contract;
+   string symbol;
+   uint16_t min = 0;
+   uint16_t max = 1000;
+   uint16_t limit = 30;
+   string direction = "both";
+
+   get_transacted_accounts_subcommand(CLI::App* app) {
+       auto cmd = app->add_subcommand("transacted_accounts", localized("get all account that interacted with the source account provided"), false);
+       cmd->add_option("account", account, localized("source account"))->required();
+       cmd->add_option("min", min, localized("minimum value"));
+       cmd->add_option("max", max, localized("maximum value"));
+       cmd->add_option("limit", limit, localized("query limit"));
+       cmd->add_option("direction", direction, localized("search direction (Allowed values: in, out, both)"));
+       cmd->add_option("-c,--contract", contract, localized("token contract"));
+       cmd->add_option("-s,--symbol", symbol, localized("token symbol"));
+
+
+       cmd->set_callback([this] {
+
+           string url = get_transacted_accounts_func
+               + "?account=" + account
+               + "&min=" + std::to_string(min)
+               + "&max=" + std::to_string(max)
+               + "&limit=" + std::to_string(limit)
+               + "&direction=" + direction;
+
+           if (contract.length() > 0) {
+               url += "&contract=" + contract;
+           }
+
+           if (symbol.length() > 0) {
+               url += "&symbol=" + symbol;
+           }
+
+           auto res = call(url).get_object();
+
+           std::cout << std::endl;
+           std::cout << "Showing transacted accounts for acccount: " + res["account"].as_string();
+           if ( res.find("contract") != res.end() ) {
+               std::cout << ", contract: " << res["contract"].as_string();
+           }
+           if ( res.find("symbol") != res.end() ) {
+               std::cout << ", symbol: " << res["symbol"].as_string();
+           }
+           std::cout << std::endl << std::endl;
+
+           if ( res.find("inputs") != res.end() ) {
+               print_transacted_accounts_table("Inputs", res["inputs"].get_array(), res["total_in"]);
+           }
+
+           if ( res.find("outputs") != res.end() ) {
+               print_transacted_accounts_table("Outputs", res["outputs"].get_array(), res["total_out"]);
+           }
+
+           std::cout << std::endl;
+       });
+   }
+};
+
 CLI::callback_t header_opt_callback = [](CLI::results_t res) {
    vector<string>::iterator itr;
 
@@ -2504,6 +2592,9 @@ int main( int argc, char** argv ) {
    auto getCreator = get->add_subcommand("creator", localized("Retrieve the creator of an account from the blockchain"), false);
    getCreator->add_option("name", accountName, localized("The name of the account"))->required();
    getCreator->set_callback([&]() { get_creator(accountName); });
+
+   // get transacted accounts
+   auto getTransactedAccounts = get_transacted_accounts_subcommand(get);
 
    // get code
    string codeFilename;
