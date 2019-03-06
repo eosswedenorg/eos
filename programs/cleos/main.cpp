@@ -2305,6 +2305,31 @@ void get_creator( const string& name ) {
     std::cout << std::endl;
 }
 
+struct get_abi_snapshot_subcommand {
+    string contract;
+    uint64_t block;
+
+    get_abi_snapshot_subcommand(CLI::App* app) {
+        auto cmd = app->add_subcommand("abi_snapshot", localized("fetch abi at a specific block"), false);
+        cmd->add_option("contract", contract, localized("contract account"))->required();
+        cmd->add_option("block", block, localized("target block"))->required();
+
+        cmd->set_callback([this] {
+
+            string url = get_abi_snapshot_func
+                + "?contract=" + contract
+                + "&block=" + std::to_string(block);
+
+            // Just print the raw abi data.
+            // TODO: right now, the api returns a error message in non-json format if the
+            //      abi could not be found, i consider that as a bug in the api for now.
+            //      handle the error better when the api works as intended.
+            auto result = call(url);
+            std::cout << fc::json::to_pretty_string(result) << std::endl;
+        });
+    }
+};
+
 static void print_transacted_accounts_table(string prefix, const fc::variants& table, const fc::variant& total) {
 
     std::cout << prefix << std::endl;
@@ -2673,6 +2698,9 @@ int main( int argc, char** argv ) {
          std::cout << abi << "\n";
       }
    });
+
+   // get abi snapshot
+   auto getAbiSnapshot = get_abi_snapshot_subcommand(get);
 
    // get table
    string scope;
