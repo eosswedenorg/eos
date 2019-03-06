@@ -2918,13 +2918,8 @@ int main( int argc, char** argv ) {
    uint32_t block_num_hint = 0;
    auto getTransaction = get->add_subcommand("transaction", localized("Retrieve a transaction from the blockchain"), false);
    getTransaction->add_option("id", transaction_id_str, localized("ID of the transaction to retrieve"))->required();
-   getTransaction->add_option( "-b,--block-hint", block_num_hint, localized("the block number this transaction may be in") );
    getTransaction->set_callback([&] {
-      auto arg= fc::mutable_variant_object( "id", transaction_id_str);
-      if ( block_num_hint > 0 ) {
-         arg = arg("block_num_hint", block_num_hint);
-      }
-      std::cout << fc::json::to_pretty_string(call(get_transaction_func, arg)) << std::endl;
+       std::cout << fc::json::to_pretty_string(call(get_transaction_func + "?id=" + transaction_id_str)) << std::endl;
    });
 
    // get block detail
