@@ -124,6 +124,7 @@ Options:
 #include "help_text.hpp"
 #include "localize.hpp"
 #include "config.hpp"
+#include "helpers.hpp"
 #include "httpc.hpp"
 
 using namespace std;
@@ -133,6 +134,7 @@ using namespace eosio::client::help;
 using namespace eosio::client::http;
 using namespace eosio::client::localize;
 using namespace eosio::client::config;
+using namespace eosio::client::helpers;
 using namespace boost::filesystem;
 using auth_type = fc::static_variant<public_key_type, permission_level>;
 
@@ -2377,11 +2379,11 @@ struct get_root_actions_subcommand {
 
             if ( before.length() > 0 ) {
 
-                params += "&before=" + _fixDate(before);
+                params += "&before=" + url_encode(before);
             }
 
             if ( after.length() > 0 ) {
-                params += "&after=" + _fixDate(after);
+                params += "&after=" + url_encode(after);
             }
 
             if ( params.length() > 0 ) {
@@ -2398,13 +2400,6 @@ struct get_root_actions_subcommand {
                 }
             }
         });
-    }
-private :
-    string& _fixDate(string& date) {
-        // Need to url encode :)
-        date.replace(date.find(":"), 1, "%3A");
-        date.replace(date.find("+"), 1, "%2B");
-        return date;
     }
 };
 
