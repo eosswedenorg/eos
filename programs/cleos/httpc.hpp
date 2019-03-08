@@ -107,7 +107,7 @@ namespace eosio { namespace client { namespace http {
    const string get_actions_func = history_func_base + "/get_actions";
    const string get_transaction_func = "/v2/history/get_transaction";
    const string get_block_detail_func = history_func_base + "/get_block_detail";
-   const string get_key_accounts_func = history_func_base + "/get_key_accounts";
+   const string get_key_accounts_func = "/v2/history/get_key_accounts";
    const string get_controlled_accounts_func = history_func_base + "/get_controlled_accounts";
 
    // v2
