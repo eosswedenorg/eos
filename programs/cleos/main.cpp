@@ -2511,8 +2511,8 @@ int main( int argc, char** argv ) {
       try {
          public_key = public_key_type(public_key_str);
       } EOS_RETHROW_EXCEPTIONS(public_key_type_exception, "Invalid public key: ${public_key}", ("public_key", public_key_str))
-      auto arg = fc::mutable_variant_object( "public_key", public_key);
-      std::cout << fc::json::to_pretty_string(call(get_key_accounts_func, arg)) << std::endl;
+      auto res = call(get_key_accounts_func + "?public_key=" + public_key_str);
+      std::cout << fc::json::to_pretty_string(res) << std::endl;
    });
 
 
