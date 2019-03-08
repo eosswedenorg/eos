@@ -2402,6 +2402,64 @@ struct get_abi_snapshot_subcommand {
     }
 };
 
+struct get_transfers_subcommand {
+    string from;
+    string to;
+    string symbol;
+    string contract;
+    string after;
+    string before;
+
+    get_transfers_subcommand(CLI::App* app) {
+        auto cmd = app->add_subcommand("transfers", localized("get token transfers"), false);
+        cmd->add_option("from", from, localized("source account"))->required();
+        cmd->add_option("to", to, localized("destination account"));
+        cmd->add_option("--symbol", symbol, localized("token symbol"));
+        cmd->add_option("--contract", contract, localized("token contract"));
+        cmd->add_option("--before", before, localized("filter before specified date (ISO8601 ex: \"2019-03-06T14:23:06+00:00\")"));
+        cmd->add_option("--after", after, localized("filter after specified date (ISO8601 ex: \"2019-03-06T14:23:06+00:00\")"));
+
+        cmd->set_callback([this] {
+
+            // Build query string.
+            string params = "?from=" + from;
+
+            if ( to.length() > 0 ) {
+                params += "&to=" + to;
+            }
+
+            if ( symbol.length() > 0 ) {
+                params += "&symbol=" + symbol;
+            }
+
+            if ( contract.length() > 0 ) {
+                params += "&contract=" + contract;
+            }
+
+            if ( before.length() > 0 ) {
+                params += "&before=" + url_encode(before);
+            }
+
+            if ( after.length() > 0 ) {
+                params += "&after=" + url_encode(after);
+            }
+
+            auto res = call(get_transfers_func + params).get_object();
+
+            for( auto& row : res["actions"].get_array() ) {
+                const auto& obj = row.get_object();
+
+                std::cout << obj["trx_id"].as_string()
+                    << " - " << obj["@timestamp"].as_string()
+                    << std::endl
+                    << fc::json::to_pretty_string(obj["act"])
+                    << std::endl
+                    << std::endl;
+            }
+        });
+    }
+};
+
 static void print_transacted_accounts_table(string prefix, const fc::variants& table, const fc::variant& total) {
 
     std::cout << prefix << std::endl;
@@ -2925,6 +2983,9 @@ int main( int argc, char** argv ) {
       auto arg = fc::mutable_variant_object("block_num_or_id", block_detail_arg);
       std::cout << fc::json::to_pretty_string(call(get_block_detail_func, arg)) << std::endl;
    });
+
+   // get transfers
+   auto getTransfers = get_transfers_subcommand(get);
 
    // get actions
    string account_name;
