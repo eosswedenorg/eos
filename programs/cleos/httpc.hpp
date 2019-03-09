@@ -105,13 +105,15 @@ namespace eosio { namespace client { namespace http {
 
    const string history_func_base = "/v1/history";
    const string get_actions_func = history_func_base + "/get_actions";
-   const string get_transaction_func = "/v2/history/get_transaction";
+   const string get_transaction_func = history_func_base + "/get_transaction";
    const string get_block_detail_func = history_func_base + "/get_block_detail";
-   const string get_key_accounts_func = "/v2/history/get_key_accounts";
+   const string get_key_accounts_func = history_func_base + "/get_key_accounts";
    const string get_controlled_accounts_func = history_func_base + "/get_controlled_accounts";
 
    // v2
+   const string get_key_accounts_v2_func = "/v2/history/get_key_accounts";
    const string get_creator_func = "/v2/history/get_creator";
+   const string get_transaction_v2_func = "/v2/history/get_transaction";
    const string get_transacted_accounts_func = "/v2/history/get_transacted_accounts";
    const string get_abi_snapshot_func = "/v2/history/get_abi_snapshot";
    const string get_root_actions_func = "/v2/history/get_actions";
