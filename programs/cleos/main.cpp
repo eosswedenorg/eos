@@ -185,6 +185,7 @@ bool   print_request = false;
 bool   print_response = false;
 bool   no_auto_keosd = false;
 bool   verbose = false;
+bool   legacy_api = false; // If old api should be used. hyperion is used per default where available
 
 uint8_t  tx_max_cpu_usage = 0;
 uint32_t tx_max_net_usage = 0;
@@ -2607,6 +2608,7 @@ int main( int argc, char** argv ) {
    app.add_flag( "--no-auto-" + string(key_store_executable_name), no_auto_keosd, localized("don't automatically launch a ${k} if one is not currently running", ("k", key_store_executable_name)));
    app.set_callback([&app]{ ensure_keosd_running(&app);});
 
+   app.add_flag( "--legacy-api", legacy_api, localized("If old api should be used, per default hyperion is used where available."));
    app.add_flag( "-v,--verbose", verbose, localized("output verbose errors and action console output"));
    app.add_flag("--print-request", print_request, localized("print HTTP request to STDERR"));
    app.add_flag("--print-response", print_response, localized("print HTTP response to STDERR"));
@@ -2978,8 +2980,14 @@ int main( int argc, char** argv ) {
       try {
          public_key = public_key_type(public_key_str);
       } EOS_RETHROW_EXCEPTIONS(public_key_type_exception, "Invalid public key: ${public_key}", ("public_key", public_key_str))
-      auto res = call(get_key_accounts_func + "?public_key=" + public_key_str);
-      std::cout << fc::json::to_pretty_string(res) << std::endl;
+
+      if ( legacy_api ) {
+          auto arg = fc::mutable_variant_object( "public_key", public_key);
+          std::cout << fc::json::to_pretty_string(call(get_key_accounts_func, arg)) << std::endl;
+      } else {
+          auto res = call(get_key_accounts_v2_func + "?public_key=" + public_key_str);
+          std::cout << fc::json::to_pretty_string(res) << std::endl;
+      }
    });
 
 
@@ -2997,8 +3005,18 @@ int main( int argc, char** argv ) {
    uint32_t block_num_hint = 0;
    auto getTransaction = get->add_subcommand("transaction", localized("Retrieve a transaction from the blockchain"), false);
    getTransaction->add_option("id", transaction_id_str, localized("ID of the transaction to retrieve"))->required();
+   getTransaction->add_option( "-b,--block-hint", block_num_hint, localized("the block number this transaction may be in") );
    getTransaction->set_callback([&] {
-       std::cout << fc::json::to_pretty_string(call(get_transaction_func + "?id=" + transaction_id_str)) << std::endl;
+
+       if ( legacy_api ) {
+           auto arg= fc::mutable_variant_object( "id", transaction_id_str);
+           if ( block_num_hint > 0 ) {
+              arg = arg("block_num_hint", block_num_hint);
+           }
+           std::cout << fc::json::to_pretty_string(call(get_transaction_func, arg)) << std::endl;
+       } else {
+           std::cout << fc::json::to_pretty_string(call(get_transaction_v2_func + "?id=" + transaction_id_str)) << std::endl;
+       }
    });
 
    // get transfers
