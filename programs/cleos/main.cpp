@@ -1867,6 +1867,30 @@ void get_creator( const string& name ) {
     std::cout << std::endl;
 }
 
+struct get_created_accounts_subcommand {
+    string account;
+
+    get_created_accounts_subcommand(CLI::App* app) {
+        auto cmd = app->add_subcommand("created_accounts", localized("get created accounts"), false);
+        cmd->add_option("account", account, localized("the account to show created accounts for"))->required();
+
+        cmd->set_callback([this] {
+
+            auto res = call(get_created_accounts_func + "?account=" + account).get_object();
+
+            if ( res.find("accounts") != res.end() ) {
+                for ( const auto& row : res["accounts"].get_array() ) {
+                    const auto& obj = row.get_object();
+                    std::cout << "---------------------------------" << std::endl;
+                    std::cout << "  Account: " << obj["name"].as_string()   << std::endl;
+                    std::cout << "  Date: "    << obj["timestamp"].as_string() << std::endl;
+                }
+                std::cout << "---------------------------------" << std::endl;
+            }
+        });
+    }
+};
+
 struct get_root_actions_subcommand {
     string account;
     string filter;
@@ -2309,6 +2333,9 @@ int main( int argc, char** argv ) {
    auto getCreator = get->add_subcommand("creator", localized("Retrieve the creator of an account from the blockchain"), false);
    getCreator->add_option("name", accountName, localized("The name of the account"))->required();
    getCreator->set_callback([&]() { get_creator(accountName); });
+
+   // get created accounts
+   auto getCreatedAccounts = get_created_accounts_subcommand(get);
 
    // get transacted accounts
    auto getTransactedAccounts = get_transacted_accounts_subcommand(get);
