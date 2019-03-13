@@ -113,6 +113,7 @@ namespace eosio { namespace client { namespace http {
    // v2
    const string get_key_accounts_v2_func = "/v2/state/get_key_accounts";
    const string get_creator_func = "/v2/history/get_creator";
+   const string get_created_accounts_func = "/v2/history/get_created_accounts";
    const string get_transaction_v2_func = "/v2/history/get_transaction";
    const string get_transacted_accounts_func = "/v2/history/get_transacted_accounts";
    const string get_abi_snapshot_func = "/v2/history/get_abi_snapshot";
