@@ -2294,32 +2294,40 @@ void get_account( const string& accountName, const string& coresym, bool json_fo
    }
 }
 
-void get_creator( const string& name ) {
+void get_creator( const string& name, bool print_as_json ) {
 
     fc::variant json = call(get_creator_func + "?account=" + name);
 
-    std::cout << std::endl;
-    if ( !json["creator"].is_null() ) {
-        std::cout << "  Creator: " << json["creator"].as_string()   << std::endl;
-        std::cout << "  Date: "    << json["timestamp"].as_string() << std::endl;
+    if ( print_as_json ) {
+        std::cout << fc::json::to_pretty_string(json) << std::endl;
     } else {
-        std::cout << "Could not find creator" << std::endl;
+        std::cout << std::endl;
+        if ( !json["creator"].is_null() ) {
+            std::cout << "  Creator: " << json["creator"].as_string()   << std::endl;
+            std::cout << "  Date: "    << json["timestamp"].as_string() << std::endl;
+        } else {
+            std::cout << "Could not find creator" << std::endl;
+        }
+        std::cout << std::endl;
     }
-    std::cout << std::endl;
 }
 
 struct get_created_accounts_subcommand {
+    bool print_as_json;
     string account;
 
     get_created_accounts_subcommand(CLI::App* app) {
         auto cmd = app->add_subcommand("created_accounts", localized("get created accounts"), false);
         cmd->add_option("account", account, localized("the account to show created accounts for"))->required();
+        cmd->add_flag("-j,--json", print_as_json, localized("print result as json"));
 
         cmd->set_callback([this] {
 
             auto res = call(get_created_accounts_func + "?account=" + account).get_object();
 
-            if ( res.find("accounts") != res.end() ) {
+            if ( print_as_json ) {
+                std::cout << fc::json::to_pretty_string(res) << std::endl;
+            } else if ( res.find("accounts") != res.end() ) {
                 for ( const auto& row : res["accounts"].get_array() ) {
                     const auto& obj = row.get_object();
                     std::cout << "---------------------------------" << std::endl;
@@ -2333,6 +2341,7 @@ struct get_created_accounts_subcommand {
 };
 
 struct get_root_actions_subcommand {
+    bool print_as_json;
     string account;
     string filter;
     uint64_t offset = 0;
@@ -2350,6 +2359,7 @@ struct get_root_actions_subcommand {
         cmd->add_option("-s,--sort", sort, localized("sort direction (asc,desc,1,-1)"));
         cmd->add_option("--before", before, localized("filter before specified date (ISO8601 ex: \"2019-03-06T14:23:06+00:00\")"));
         cmd->add_option("--after", after, localized("filter after specified date (ISO8601 ex: \"2019-03-06T14:23:06+00:00\")"));
+        cmd->add_flag("-j,--json", print_as_json, localized("print result as json"));
 
         cmd->set_callback([this] {
 
@@ -2391,7 +2401,9 @@ struct get_root_actions_subcommand {
 
             auto res = call(get_root_actions_func + params).get_object();
 
-            if ( res.find("actions") != res.end() ) {
+            if ( print_as_json ) {
+                std::cout << fc::json::to_pretty_string(res) << std::endl;
+            } else if ( res.find("actions") != res.end() ) {
                 for ( const auto& row : res["actions"].get_array() ) {
                     const auto& obj = row.get_object();
                     std::cout << "--- Block: " << obj["block_num"].as_string() << std::endl;
@@ -2428,6 +2440,7 @@ struct get_abi_snapshot_subcommand {
 };
 
 struct get_transfers_subcommand {
+    bool print_as_json;
     string from;
     string to;
     string symbol;
@@ -2443,6 +2456,7 @@ struct get_transfers_subcommand {
         cmd->add_option("--contract", contract, localized("token contract"));
         cmd->add_option("--before", before, localized("filter before specified date (ISO8601 ex: \"2019-03-06T14:23:06+00:00\")"));
         cmd->add_option("--after", after, localized("filter after specified date (ISO8601 ex: \"2019-03-06T14:23:06+00:00\")"));
+        cmd->add_flag("-j,--json", print_as_json, localized("print result as json"));
 
         cmd->set_callback([this] {
 
@@ -2471,15 +2485,19 @@ struct get_transfers_subcommand {
 
             auto res = call(get_transfers_func + params).get_object();
 
-            for( auto& row : res["actions"].get_array() ) {
-                const auto& obj = row.get_object();
+            if ( print_as_json ) {
+                std::cout << fc::json::to_pretty_string(res) << std::endl;
+            } else {
+                for( auto& row : res["actions"].get_array() ) {
+                    const auto& obj = row.get_object();
 
-                std::cout << obj["trx_id"].as_string()
-                    << " - " << obj["@timestamp"].as_string()
-                    << std::endl
-                    << fc::json::to_pretty_string(obj["act"])
-                    << std::endl
-                    << std::endl;
+                    std::cout << obj["trx_id"].as_string()
+                        << " - " << obj["@timestamp"].as_string()
+                        << std::endl
+                        << fc::json::to_pretty_string(obj["act"])
+                        << std::endl
+                        << std::endl;
+                }
             }
         });
     }
@@ -2512,6 +2530,7 @@ static void print_transacted_accounts_table(string prefix, const fc::variants& t
 }
 
 struct get_transacted_accounts_subcommand {
+    bool print_as_json;
     string account;
     string contract;
     string symbol;
@@ -2529,6 +2548,7 @@ struct get_transacted_accounts_subcommand {
         cmd->add_option("direction", direction, localized("search direction (Allowed values: in, out, both)"));
         cmd->add_option("-c,--contract", contract, localized("token contract"));
         cmd->add_option("-s,--symbol", symbol, localized("token symbol"));
+        cmd->add_flag("-j,--json", print_as_json, localized("print result as json"));
 
         cmd->set_callback([this] {
 
@@ -2549,25 +2569,29 @@ struct get_transacted_accounts_subcommand {
 
             auto res = call(url).get_object();
 
-            std::cout << std::endl;
-            std::cout << "Showing transacted accounts for acccount: " + res["account"].as_string();
-            if ( res.find("contract") != res.end() ) {
-                std::cout << ", contract: " << res["contract"].as_string();
-            }
-            if ( res.find("symbol") != res.end() ) {
-                std::cout << ", symbol: " << res["symbol"].as_string();
-            }
-            std::cout << std::endl << std::endl;
+            if ( print_as_json ) {
+                std::cout << fc::json::to_pretty_string(res) << std::endl;
+            } else {
+                std::cout << std::endl;
+                std::cout << "Showing transacted accounts for acccount: " + res["account"].as_string();
+                if ( res.find("contract") != res.end() ) {
+                    std::cout << ", contract: " << res["contract"].as_string();
+                }
+                if ( res.find("symbol") != res.end() ) {
+                    std::cout << ", symbol: " << res["symbol"].as_string();
+                }
+                std::cout << std::endl << std::endl;
 
-            if ( res.find("inputs") != res.end() ) {
-                print_transacted_accounts_table("Inputs", res["inputs"].get_array(), res["total_in"]);
-            }
+                if ( res.find("inputs") != res.end() ) {
+                    print_transacted_accounts_table("Inputs", res["inputs"].get_array(), res["total_in"]);
+                }
 
-            if ( res.find("outputs") != res.end() ) {
-                print_transacted_accounts_table("Outputs", res["outputs"].get_array(), res["total_out"]);
-            }
+                if ( res.find("outputs") != res.end() ) {
+                    print_transacted_accounts_table("Outputs", res["outputs"].get_array(), res["total_out"]);
+                }
 
-            std::cout << std::endl;
+                std::cout << std::endl;
+            }
         });
     }
 };
@@ -2772,7 +2796,8 @@ int main( int argc, char** argv ) {
    // get creator
    auto getCreator = get->add_subcommand("creator", localized("Retrieve the creator of an account from the blockchain"), false);
    getCreator->add_option("name", accountName, localized("The name of the account"))->required();
-   getCreator->set_callback([&]() { get_creator(accountName); });
+   getCreator->add_flag("-j,--json", print_json, localized("print result as json"));
+   getCreator->set_callback([&]() { get_creator(accountName, print_json); });
 
    // get created accounts
    auto getCreatedAccounts = get_created_accounts_subcommand(get);
