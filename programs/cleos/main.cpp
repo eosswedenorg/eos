@@ -2538,65 +2538,64 @@ static void print_transacted_accounts_table(string prefix, const fc::variants& t
 }
 
 struct get_transacted_accounts_subcommand {
-   string account;
-   string contract;
-   string symbol;
-   uint16_t min = 0;
-   uint16_t max = 1000;
-   uint16_t limit = 30;
-   string direction = "both";
+    string account;
+    string contract;
+    string symbol;
+    uint16_t min = 0;
+    uint16_t max = 1000;
+    uint16_t limit = 30;
+    string direction = "both";
 
-   get_transacted_accounts_subcommand(CLI::App* app) {
-       auto cmd = app->add_subcommand("transacted_accounts", localized("get all account that interacted with the source account provided"), false);
-       cmd->add_option("account", account, localized("source account"))->required();
-       cmd->add_option("min", min, localized("minimum value"));
-       cmd->add_option("max", max, localized("maximum value"));
-       cmd->add_option("limit", limit, localized("query limit"));
-       cmd->add_option("direction", direction, localized("search direction (Allowed values: in, out, both)"));
-       cmd->add_option("-c,--contract", contract, localized("token contract"));
-       cmd->add_option("-s,--symbol", symbol, localized("token symbol"));
+    get_transacted_accounts_subcommand(CLI::App* app) {
+        auto cmd = app->add_subcommand("transacted_accounts", localized("get all account that interacted with the source account provided"), false);
+        cmd->add_option("account", account, localized("source account"))->required();
+        cmd->add_option("min", min, localized("minimum value"));
+        cmd->add_option("max", max, localized("maximum value"));
+        cmd->add_option("limit", limit, localized("query limit"));
+        cmd->add_option("direction", direction, localized("search direction (Allowed values: in, out, both)"));
+        cmd->add_option("-c,--contract", contract, localized("token contract"));
+        cmd->add_option("-s,--symbol", symbol, localized("token symbol"));
 
+        cmd->set_callback([this] {
 
-       cmd->set_callback([this] {
-
-           string url = get_transacted_accounts_func
+            string url = get_transacted_accounts_func
                + "?account=" + account
                + "&min=" + std::to_string(min)
                + "&max=" + std::to_string(max)
                + "&limit=" + std::to_string(limit)
                + "&direction=" + direction;
 
-           if (contract.length() > 0) {
-               url += "&contract=" + contract;
-           }
+            if (contract.length() > 0) {
+                url += "&contract=" + contract;
+            }
 
-           if (symbol.length() > 0) {
-               url += "&symbol=" + symbol;
-           }
+            if (symbol.length() > 0) {
+                url += "&symbol=" + symbol;
+            }
 
-           auto res = call(url).get_object();
+            auto res = call(url).get_object();
 
-           std::cout << std::endl;
-           std::cout << "Showing transacted accounts for acccount: " + res["account"].as_string();
-           if ( res.find("contract") != res.end() ) {
-               std::cout << ", contract: " << res["contract"].as_string();
-           }
-           if ( res.find("symbol") != res.end() ) {
-               std::cout << ", symbol: " << res["symbol"].as_string();
-           }
-           std::cout << std::endl << std::endl;
+            std::cout << std::endl;
+            std::cout << "Showing transacted accounts for acccount: " + res["account"].as_string();
+            if ( res.find("contract") != res.end() ) {
+                std::cout << ", contract: " << res["contract"].as_string();
+            }
+            if ( res.find("symbol") != res.end() ) {
+                std::cout << ", symbol: " << res["symbol"].as_string();
+            }
+            std::cout << std::endl << std::endl;
 
-           if ( res.find("inputs") != res.end() ) {
-               print_transacted_accounts_table("Inputs", res["inputs"].get_array(), res["total_in"]);
-           }
+            if ( res.find("inputs") != res.end() ) {
+                print_transacted_accounts_table("Inputs", res["inputs"].get_array(), res["total_in"]);
+            }
 
-           if ( res.find("outputs") != res.end() ) {
-               print_transacted_accounts_table("Outputs", res["outputs"].get_array(), res["total_out"]);
-           }
+            if ( res.find("outputs") != res.end() ) {
+                print_transacted_accounts_table("Outputs", res["outputs"].get_array(), res["total_out"]);
+            }
 
-           std::cout << std::endl;
-       });
-   }
+            std::cout << std::endl;
+        });
+    }
 };
 
 CLI::callback_t header_opt_callback = [](CLI::results_t res) {
