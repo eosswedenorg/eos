@@ -2317,7 +2317,7 @@ struct get_created_accounts_subcommand {
     string account;
 
     get_created_accounts_subcommand(CLI::App* app) {
-        auto cmd = app->add_subcommand("created_accounts", localized("get created accounts"), false);
+        auto cmd = app->add_subcommand("created_accounts", localized("get created accounts (v2)"), false);
         cmd->add_option("account", account, localized("the account to show created accounts for"))->required();
         cmd->add_flag("-j,--json", print_as_json, localized("print result as json"));
 
@@ -2351,7 +2351,7 @@ struct get_root_actions_subcommand {
     string before;
 
     get_root_actions_subcommand(CLI::App* app) {
-        auto cmd = app->add_subcommand("root_actions", localized("get root actions"), false);
+        auto cmd = app->add_subcommand("root_actions", localized("get root actions (v2)"), false);
         cmd->add_option("offset", offset, localized("skip [n] actions (pagination)"));
         cmd->add_option("limit", limit, localized("limit of [n] actions per page"));
         cmd->add_option("-a,--account", account, localized("notified account"));
@@ -2419,7 +2419,7 @@ struct get_abi_snapshot_subcommand {
     uint64_t block;
 
     get_abi_snapshot_subcommand(CLI::App* app) {
-        auto cmd = app->add_subcommand("abi_snapshot", localized("fetch abi at a specific block"), false);
+        auto cmd = app->add_subcommand("abi_snapshot", localized("fetch abi at a specific block (v2)"), false);
         cmd->add_option("contract", contract, localized("contract account"))->required();
         cmd->add_option("block", block, localized("target block"))->required();
 
@@ -2449,7 +2449,7 @@ struct get_transfers_subcommand {
     string before;
 
     get_transfers_subcommand(CLI::App* app) {
-        auto cmd = app->add_subcommand("transfers", localized("get token transfers"), false);
+        auto cmd = app->add_subcommand("transfers", localized("get token transfers (v2)"), false);
         cmd->add_option("from", from, localized("source account"))->required();
         cmd->add_option("to", to, localized("destination account"));
         cmd->add_option("--symbol", symbol, localized("token symbol"));
@@ -2540,7 +2540,7 @@ struct get_transacted_accounts_subcommand {
     string direction = "both";
 
     get_transacted_accounts_subcommand(CLI::App* app) {
-        auto cmd = app->add_subcommand("transacted_accounts", localized("get all account that interacted with the source account provided"), false);
+        auto cmd = app->add_subcommand("transacted_accounts", localized("get all account that interacted with the source account provided (v2)"), false);
         cmd->add_option("account", account, localized("source account"))->required();
         cmd->add_option("min", min, localized("minimum value"));
         cmd->add_option("max", max, localized("maximum value"));
@@ -2794,7 +2794,7 @@ int main( int argc, char** argv ) {
    getAccount->set_callback([&]() { get_account(accountName, coresym, print_json); });
 
    // get creator
-   auto getCreator = get->add_subcommand("creator", localized("Retrieve the creator of an account from the blockchain"), false);
+   auto getCreator = get->add_subcommand("creator", localized("Retrieve the creator of an account from the blockchain (v2)"), false);
    getCreator->add_option("name", accountName, localized("The name of the account"))->required();
    getCreator->add_flag("-j,--json", print_json, localized("print result as json"));
    getCreator->set_callback([&]() { get_creator(accountName, print_json); });
