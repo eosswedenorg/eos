@@ -2655,6 +2655,60 @@ struct get_transacted_accounts_subcommand {
     }
 };
 
+struct get_deltas_subcommand {
+    bool print_as_json;
+    string code;
+    string scope;
+    string table;
+    string payer;
+
+    get_deltas_subcommand(CLI::App* app) {
+        auto cmd = app->add_subcommand("deltas", localized("Get state deltas (v2)"), false);
+        cmd->add_option("code", code, localized("Contract account"))->required();
+        cmd->add_option("-s,--scope", scope, localized("table scope"));
+        cmd->add_option("-t,--table", table, localized("table name"));
+        cmd->add_option("-p,--payer", payer, localized("payer"));
+        cmd->add_flag("-j,--json", print_as_json, localized("print result as json"));
+
+        cmd->set_callback([this] {
+
+            string url = get_deltas_func
+               + "?code=" + code;
+
+            if (scope.length() > 0) {
+                url += "&scope=" + scope;
+            }
+
+            if (table.length() > 0) {
+                url += "&table=" + table;
+            }
+
+            if (payer.length() > 0) {
+                url += "&payer=" + payer;
+            }
+
+            auto res = call(url).get_object();
+
+            if ( print_as_json ) {
+                std::cout << fc::json::to_pretty_string(res) << std::endl;
+            } else {
+                for( auto& row : res["deltas"].get_array() ) {
+                    const auto& obj = row.get_object();
+
+                    std::cout << "-------------------" << std::endl;
+                    std::cout << "  Block: " << obj["block_num"].as_string() << std::endl;
+                    std::cout << "  Primary Key: " << obj["primary_key"].as_string() << std::endl;
+                    std::cout << "  Scope: " << obj["scope"].as_string() << std::endl;
+                    std::cout << "  Table: " << obj["table"].as_string() << std::endl;
+                    std::cout << "  Payer: " << obj["payer"].as_string() << std::endl;
+                }
+
+                std::cout << "-------------------" << std::endl;
+            }
+        });
+    }
+};
+
 CLI::callback_t header_opt_callback = [](CLI::results_t res) {
    vector<string>::iterator itr;
 
@@ -2859,6 +2913,9 @@ int main( int argc, char** argv ) {
 
    // get transacted accounts
    auto getTransactedAccounts = get_transacted_accounts_subcommand(get);
+
+   // get deltas
+   auto getDeltas = get_deltas_subcommand(get);
 
    // get code
    string codeFilename;
