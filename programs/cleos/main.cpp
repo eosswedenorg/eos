@@ -1853,23 +1853,35 @@ void get_account( const string& accountName, const string& coresym, bool json_fo
    }
 }
 
-void get_creator( const string& name, bool print_as_json ) {
+struct get_account_creator_subcommand {
+    bool print_as_json;
+    string name;
 
-    fc::variant json = call(get_creator_func + "?account=" + name);
+    get_account_creator_subcommand(CLI::App* app) {
 
-    if ( print_as_json ) {
-        std::cout << fc::json::to_pretty_string(json) << std::endl;
-    } else {
-        std::cout << std::endl;
-        if ( !json["creator"].is_null() ) {
-            std::cout << "  Creator: " << json["creator"].as_string()   << std::endl;
-            std::cout << "  Date: "    << json["timestamp"].as_string() << std::endl;
-        } else {
-            std::cout << "Could not find creator" << std::endl;
-        }
-        std::cout << std::endl;
+        auto cmd = app->add_subcommand("creator", localized("Retrieve the creator of an account from the blockchain (v2)"), false);
+        cmd->add_option("name", name, localized("The name of the account"))->required();
+        cmd->add_flag("-j,--json", print_as_json, localized("print result as json"));
+        cmd->set_callback([this] {
+
+            fc::variant json = call(get_creator_func + "?account=" + name);
+
+            if ( print_as_json ) {
+                std::cout << fc::json::to_pretty_string(json) << std::endl;
+            } else {
+                std::cout << std::endl;
+                if ( !json["creator"].is_null() ) {
+                    std::cout << "  Creator: " << json["creator"].as_string()   << std::endl;
+                    std::cout << "  Date: "    << json["timestamp"].as_string() << std::endl;
+                } else {
+                    std::cout << "Could not find creator" << std::endl;
+                }
+                std::cout << std::endl;
+            }
+
+        });
     }
-}
+};
 
 struct get_created_accounts_subcommand {
     bool print_as_json;
@@ -2374,10 +2386,7 @@ int main( int argc, char** argv ) {
    getAccount->set_callback([&]() { get_account(accountName, coresym, print_json); });
 
    // get creator
-   auto getCreator = get->add_subcommand("creator", localized("Retrieve the creator of an account from the blockchain (v2)"), false);
-   getCreator->add_option("name", accountName, localized("The name of the account"))->required();
-   getCreator->add_flag("-j,--json", print_json, localized("print result as json"));
-   getCreator->set_callback([&]() { get_creator(accountName, print_json); });
+   auto getCreator = get_account_creator_subcommand(get);
 
    // get created accounts
    auto getCreatedAccounts = get_created_accounts_subcommand(get);
