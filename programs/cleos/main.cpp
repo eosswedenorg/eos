@@ -1973,27 +1973,48 @@ struct get_root_actions_subcommand {
     }
 };
 
-struct get_abi_snapshot_subcommand {
-    string contract;
-    uint64_t block;
+struct get_abi_subcommand {
+    string name;
+    string filename;
+    uint64_t block = 0;
 
-    get_abi_snapshot_subcommand(CLI::App* app) {
-        auto cmd = app->add_subcommand("abi_snapshot", localized("fetch abi at a specific block (v2)"), false);
-        cmd->add_option("contract", contract, localized("contract account"))->required();
-        cmd->add_option("block", block, localized("target block"))->required();
+    get_abi_subcommand(CLI::App* app) {
+        auto cmd = app->add_subcommand("abi", localized("Retrieve the ABI for an account"), false);
+        cmd->add_option("name", name, localized("contract account"))->required();
+        cmd->add_option("-f,--file",filename, localized("The name of the file to save the contract .abi to instead of writing to console") );
+        cmd->add_option("block", block, localized("fetch abi at a specific block (v2)"));
 
         cmd->set_callback([this] {
 
-            string url = get_abi_snapshot_func
-                + "?contract=" + contract
-                + "&block=" + std::to_string(block);
+            string abi;
 
-            // Just print the raw abi data.
-            // TODO: right now, the api returns a error message in non-json format if the
-            //      abi could not be found, i consider that as a bug in the api for now.
-            //      handle the error better when the api works as intended.
-            auto result = call(url);
-            std::cout << fc::json::to_pretty_string(result) << std::endl;
+            // v2 if block is defined.
+            if ( block > 0 ) {
+
+                string url = get_abi_snapshot_func
+                    + "?contract=" + name
+                    + "&block=" + std::to_string(block);
+
+                // Just print the raw abi data.
+                // TODO: right now, the api returns a error message in non-json format if the
+                //      abi could not be found, i consider that as a bug in the api for now.
+                //      handle the error better when the api works as intended.
+                auto result = call(url);
+                abi = fc::json::to_pretty_string(result);
+            }
+            // v1
+            else {
+                auto result = call(get_abi_func, fc::mutable_variant_object("account_name", name));
+                abi = fc::json::to_pretty_string( result["abi"] );
+            }
+
+            if( filename.size() ) {
+                std::cerr << localized("saving abi to ${filename}", ("filename", filename)) << std::endl;
+                std::ofstream abiout( filename.c_str() );
+                abiout << abi;
+            } else {
+                std::cout << abi << "\n";
+            }
         });
     }
 };
@@ -2425,25 +2446,7 @@ int main( int argc, char** argv ) {
    });
 
    // get abi
-   string filename;
-   auto getAbi = get->add_subcommand("abi", localized("Retrieve the ABI for an account"), false);
-   getAbi->add_option("name", accountName, localized("The name of the account whose abi should be retrieved"))->required();
-   getAbi->add_option("-f,--file",filename, localized("The name of the file to save the contract .abi to instead of writing to console") );
-   getAbi->set_callback([&] {
-      auto result = call(get_abi_func, fc::mutable_variant_object("account_name", accountName));
-
-      auto abi  = fc::json::to_pretty_string( result["abi"] );
-      if( filename.size() ) {
-         std::cerr << localized("saving abi to ${filename}", ("filename", filename)) << std::endl;
-         std::ofstream abiout( filename.c_str() );
-         abiout << abi;
-      } else {
-         std::cout << abi << "\n";
-      }
-   });
-
-   // get abi snapshot
-   auto getAbiSnapshot = get_abi_snapshot_subcommand(get);
+   auto getAbi = get_abi_subcommand(get);
 
    // get table
    string scope;
