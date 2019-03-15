@@ -1859,7 +1859,7 @@ struct get_account_creator_subcommand {
 
     get_account_creator_subcommand(CLI::App* app) {
 
-        auto cmd = app->add_subcommand("creator", localized("Retrieve the creator of an account from the blockchain (v2)"), false);
+        auto cmd = app->add_subcommand("creator", localized("Retrieve the creator of an account from the blockchain"), false);
         cmd->add_option("name", name, localized("The name of the account"))->required();
         cmd->add_flag("-j,--json", print_as_json, localized("print result as json"));
         cmd->set_callback([this] {
@@ -1888,7 +1888,7 @@ struct get_created_accounts_subcommand {
     string account;
 
     get_created_accounts_subcommand(CLI::App* app) {
-        auto cmd = app->add_subcommand("created_accounts", localized("get created accounts (v2)"), false);
+        auto cmd = app->add_subcommand("created", localized("get created accounts"), false);
         cmd->add_option("account", account, localized("the account to show created accounts for"))->required();
         cmd->add_flag("-j,--json", print_as_json, localized("print result as json"));
 
@@ -1922,7 +1922,7 @@ struct get_root_actions_subcommand {
     string before;
 
     get_root_actions_subcommand(CLI::App* app) {
-        auto cmd = app->add_subcommand("root_actions", localized("get root actions (v2)"), false);
+        auto cmd = app->add_subcommand("actions", localized("get root actions"), false);
         cmd->add_option("offset", offset, localized("skip [n] actions (pagination)"));
         cmd->add_option("limit", limit, localized("limit of [n] actions per page"));
         cmd->add_option("-a,--account", account, localized("notified account"));
@@ -2041,7 +2041,7 @@ struct get_transfers_subcommand {
     string before;
 
     get_transfers_subcommand(CLI::App* app) {
-        auto cmd = app->add_subcommand("transfers", localized("get token transfers (v2)"), false);
+        auto cmd = app->add_subcommand("transfers", localized("get token transfers"), false);
         cmd->add_option("from", from, localized("source account"))->required();
         cmd->add_option("to", to, localized("destination account"));
         cmd->add_option("--symbol", symbol, localized("token symbol"));
@@ -2132,7 +2132,7 @@ struct get_transacted_accounts_subcommand {
     string direction = "both";
 
     get_transacted_accounts_subcommand(CLI::App* app) {
-        auto cmd = app->add_subcommand("transacted_accounts", localized("get all account that interacted with the source account provided (v2)"), false);
+        auto cmd = app->add_subcommand("transacted", localized("get all account that interacted with the source account provided"), false);
         cmd->add_option("account", account, localized("source account"))->required();
         cmd->add_option("min", min, localized("minimum value"));
         cmd->add_option("max", max, localized("maximum value"));
@@ -2385,15 +2385,6 @@ int main( int argc, char** argv ) {
    getAccount->add_flag("--json,-j", print_json, localized("Output in JSON format") );
    getAccount->set_callback([&]() { get_account(accountName, coresym, print_json); });
 
-   // get creator
-   auto getCreator = get_account_creator_subcommand(get);
-
-   // get created accounts
-   auto getCreatedAccounts = get_created_accounts_subcommand(get);
-
-   // get transacted accounts
-   auto getTransactedAccounts = get_transacted_accounts_subcommand(get);
-
    // get code
    string codeFilename;
    string abiFilename;
@@ -2616,9 +2607,6 @@ int main( int argc, char** argv ) {
        }
    });
 
-   // get transfers
-   auto getTransfers = get_transfers_subcommand(get);
-
    // get actions
    string account_name;
    string skip_seq_str;
@@ -2712,9 +2700,6 @@ int main( int argc, char** argv ) {
           }
       }
    });
-
-   // get root actions
-   auto getRootActions = get_root_actions_subcommand(get);
 
    auto getSchedule = get_schedule_subcommand{get};
    auto getTransactionId = get_transaction_id_subcommand{get};
@@ -3782,6 +3767,33 @@ int main( int argc, char** argv ) {
    auto unregProxy = unregproxy_subcommand(system);
 
    auto cancelDelay = canceldelay_subcommand(system);
+
+   // v2
+   auto v2 = app.add_subcommand("v2", localized("Commands unique to the hyperion api"), false);
+   v2->require_subcommand();
+
+   // v2 get
+   auto v2Get = v2->add_subcommand("get", localized("Retrieve various items and information from the blockchain"));
+   v2Get->require_subcommand();
+
+   // v2 get account
+   auto v2GetAccount = v2Get->add_subcommand("account", localized("Retrieve various items related to accounts"));
+   v2GetAccount->require_subcommand();
+
+   // get creator
+   auto getCreator = get_account_creator_subcommand(v2GetAccount);
+
+   // get created accounts
+   auto getCreatedAccounts = get_created_accounts_subcommand(v2GetAccount);
+
+   // get transacted accounts
+   auto getTransactedAccounts = get_transacted_accounts_subcommand(v2GetAccount);
+
+   // get actions
+   auto getRootActions = get_root_actions_subcommand(v2Get);
+
+   // get transfers
+   auto getTransfers = get_transfers_subcommand(v2Get);
 
    try {
        app.parse(argc, argv);
