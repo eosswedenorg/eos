@@ -2709,6 +2709,35 @@ struct get_deltas_subcommand {
     }
 };
 
+struct get_tokens_subcommand {
+    bool print_as_json;
+    string account;
+
+    get_tokens_subcommand(CLI::App* app) {
+        auto cmd = app->add_subcommand("tokens", localized("Get tokens from account (v2)"), false);
+        cmd->add_option("account", account, localized("Account"))->required();
+        cmd->add_flag("-j,--json", print_as_json, localized("print result as json"));
+
+        cmd->set_callback([this] {
+
+            string url = get_tokens_func + "?account=" + account;
+
+            auto res = call(url).get_object();
+
+            if ( print_as_json ) {
+                std::cout << fc::json::to_pretty_string(res) << std::endl;
+            } else {
+                for( auto& row : res["tokens"].get_array() ) {
+                    const auto& obj = row.get_object();
+
+                    std::cout << "  " << obj["amount"].as_string()
+                              << " " << obj["symbol"].as_string() << std::endl;
+                };
+            }
+        });
+    }
+};
+
 CLI::callback_t header_opt_callback = [](CLI::results_t res) {
    vector<string>::iterator itr;
 
@@ -2916,6 +2945,8 @@ int main( int argc, char** argv ) {
 
    // get deltas
    auto getDeltas = get_deltas_subcommand(get);
+
+   auto getTokens = get_tokens_subcommand(get);
 
    // get code
    string codeFilename;
