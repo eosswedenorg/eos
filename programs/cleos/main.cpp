@@ -2573,7 +2573,7 @@ struct get_transacted_accounts_subcommand {
     string direction = "both";
 
     get_transacted_accounts_subcommand(CLI::App* app) {
-        auto cmd = app->add_subcommand("transacted_accounts", localized("get all account that interacted with the source account provided (v2)"), false);
+        auto cmd = app->add_subcommand("accounts", localized("get all account that interacted with the source account provided (v2)"), false);
         cmd->add_option("account", account, localized("source account"))->required();
         cmd->add_option("min", min, localized("minimum value"));
         cmd->add_option("max", max, localized("maximum value"));
@@ -2918,7 +2918,9 @@ int main( int argc, char** argv ) {
    auto getCreatedAccounts = get_created_accounts_subcommand(created);
 
    // get transacted accounts
-   auto getTransactedAccounts = get_transacted_accounts_subcommand(get);
+   auto transacted = get->add_subcommand("transacted", "", false);
+   transacted->require_subcommand();
+   auto getTransactedAccounts = get_transacted_accounts_subcommand(transacted);
 
    // get deltas
    auto getDeltas = get_deltas_subcommand(get);
