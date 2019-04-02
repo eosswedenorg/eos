@@ -2355,7 +2355,7 @@ struct get_created_accounts_subcommand {
     string account;
 
     get_created_accounts_subcommand(CLI::App* app) {
-        auto cmd = app->add_subcommand("created_accounts", localized("get created accounts (v2)"), false);
+        auto cmd = app->add_subcommand("accounts", localized("get created accounts (v2)"), false);
         cmd->add_option("account", account, localized("the account to show created accounts for"))->required();
         cmd->add_flag("-j,--json", print_as_json, localized("print result as json"));
 
@@ -2938,7 +2938,9 @@ int main( int argc, char** argv ) {
    auto getCreator = get_account_creator_subcommand(get);
 
    // get created accounts
-   auto getCreatedAccounts = get_created_accounts_subcommand(get);
+   auto created = get->add_subcommand("created", "", false);
+   created->require_subcommand();
+   auto getCreatedAccounts = get_created_accounts_subcommand(created);
 
    // get transacted accounts
    auto getTransactedAccounts = get_transacted_accounts_subcommand(get);
