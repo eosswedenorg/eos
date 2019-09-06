@@ -112,6 +112,7 @@ namespace eosio { namespace client { namespace http {
    const string get_controlled_accounts_func = history_func_base + "/get_controlled_accounts";
 
    // v2
+   const string get_voters_func = "/v2/state/get_voters";
    const string get_key_accounts_v2_func = "/v2/state/get_key_accounts";
    const string get_deltas_func = "/v2/history/get_deltas";
    const string get_creator_func = "/v2/history/get_creator";
