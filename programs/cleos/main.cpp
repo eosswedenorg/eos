@@ -2378,80 +2378,6 @@ struct get_created_accounts_subcommand {
     }
 };
 
-struct get_root_actions_subcommand {
-    bool print_as_json;
-    string account;
-    string filter;
-    uint64_t offset = 0;
-    uint64_t limit = 0;
-    string sort;
-    string after;
-    string before;
-
-    get_root_actions_subcommand(CLI::App* app) {
-        auto cmd = app->add_subcommand("root_actions", localized("get root actions (v2)"), false);
-        cmd->add_option("offset", offset, localized("skip [n] actions (pagination)"));
-        cmd->add_option("limit", limit, localized("limit of [n] actions per page"));
-        cmd->add_option("-a,--account", account, localized("notified account"));
-        cmd->add_option("-f,--filter", filter, localized("code::name filter"));
-        cmd->add_option("-s,--sort", sort, localized("sort direction (asc,desc,1,-1)"));
-        cmd->add_option("--before", before, localized("filter before specified date (ISO8601 ex: \"2019-03-06T14:23:06+00:00\")"));
-        cmd->add_option("--after", after, localized("filter after specified date (ISO8601 ex: \"2019-03-06T14:23:06+00:00\")"));
-        cmd->add_flag("-j,--json", print_as_json, localized("print result as json"));
-
-        cmd->set_callback([this] {
-
-            // Build query string.
-            string params;
-
-            if ( account.length() > 0 ) {
-                params += "&account=" + account;
-            }
-
-            if ( filter.length() > 0 ) {
-                params += "&filter=" + filter;
-            }
-
-            if ( sort.length() > 0 ) {
-                params += "&sort=" + sort;
-            }
-
-            if ( offset > 0 ) {
-                params += "&offset=" + std::to_string(offset);
-            }
-
-            if ( limit > 0 ) {
-                params += "&limit=" + std::to_string(limit);
-            }
-
-            if ( before.length() > 0 ) {
-
-                params += "&before=" + url_encode(before);
-            }
-
-            if ( after.length() > 0 ) {
-                params += "&after=" + url_encode(after);
-            }
-
-            if ( params.length() > 0 ) {
-                params[0] = '?';
-            }
-
-            auto res = call(get_root_actions_func + params).get_object();
-
-            if ( print_as_json ) {
-                std::cout << fc::json::to_pretty_string(res) << std::endl;
-            } else if ( res.find("actions") != res.end() ) {
-                for ( const auto& row : res["actions"].get_array() ) {
-                    const auto& obj = row.get_object();
-                    std::cout << "--- Block: " << obj["block_num"].as_string() << std::endl;
-                    std::cout << fc::json::to_pretty_string(row) << std::endl;
-                }
-            }
-        });
-    }
-};
-
 struct get_abi_subcommand {
     string name;
     string filename;
@@ -3350,9 +3276,6 @@ int main( int argc, char** argv ) {
           }
       }
    });
-
-   // get root actions
-   auto getRootActions = get_root_actions_subcommand(get);
 
    auto getSchedule = get_schedule_subcommand{get};
    auto getTransactionId = get_transaction_id_subcommand{get};
