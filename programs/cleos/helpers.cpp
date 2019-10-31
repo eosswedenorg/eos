@@ -12,7 +12,7 @@ namespace eosio { namespace client { namespace helpers {
 
 			char ch = str[i];
 
-			if (!(isalnum(ch) || ch == '-' || ch == '_' || ch == '.' || ch == '~') ) {
+			if ( !(isalnum(ch) || ch == '-' || ch == '_' || ch == '.' || ch == '~') ) {
 				std::string rep = "%";
 				rep += hex[(ch & 0xF0) >> 4];
 				rep += hex[ch & 0x0F];
@@ -20,7 +20,7 @@ namespace eosio { namespace client { namespace helpers {
 				i += 2;
 			}
 		}
-        return str;
+		return str;
     }
 
 }}}
