@@ -2687,57 +2687,48 @@ static void print_voters_table(const fc::variants& table) {
 }
 
 struct get_voters_subcommand {
-    bool print_as_json;
-    string producer;
-    uint16_t skip = 0;
-    uint16_t limit = 0;
+   bool print_as_json;
+   string producer;
+   uint16_t skip = 0;
+   uint16_t limit = 0;
 
-    get_voters_subcommand(CLI::App* app) {
-        auto cmd =app->add_subcommand("voters", localized("Retrieve voters for an producer"), false);
-	cmd->add_option("producer", producer, localized("filter by voted producer (comma separated)"));
-	cmd->add_option("skip", skip, localized("skip [n] actions (pagination)"));
-	cmd->add_option("limit", limit, localized("limit of [n] actions per page"));
-	cmd->add_flag("-j,--json", print_as_json, localized("print result as json"));
+   get_voters_subcommand(CLI::App* app) {
+      auto cmd =app->add_subcommand("voters", localized("Retrieve voters for an producer"), false);
+      cmd->add_option("producer", producer, localized("filter by voted producer (comma separated)"));
+      cmd->add_option("skip", skip, localized("skip [n] actions (pagination)"));
+      cmd->add_option("limit", limit, localized("limit of [n] actions per page"));
+      cmd->add_flag("-j,--json", print_as_json, localized("print result as json"));
 
-	cmd->set_callback([this] {
+      cmd->set_callback([this] {
 
-            string url = get_voters_func;
-	    string params;
+         string url = get_voters_func;
+         string params;
 
-	    if ( producer.length() > 0 ) {
-                params += "&producer=" + producer;
-	    }
+         if ( producer.length() > 0 ) {
+            params += "&producer=" + producer;
+         }
 
-	    if ( skip > 0 ) {
-                params += "&skip=" + std::to_string(skip);
-	    }
+         if ( skip > 0 ) {
+            params += "&skip=" + std::to_string(skip);
+         }
 
-	    if ( limit > 0 ) {
-                params += "&limit=" + std::to_string(limit);
-	    }
+         if ( limit > 0 ) {
+            params += "&limit=" + std::to_string(limit);
+         }
 
-	    if ( params.length() > 0 ) {
-                params[0] = '?';
-            }
+         if ( params.length() > 0 ) {
+            params[0] = '?';
+         }
 
-            auto res = call(url + params).get_object();
+         auto res = call(url + params).get_object();
 
-            if ( print_as_json ) {
-                std::cout << fc::json::to_pretty_string(res) << std::endl;
-            } else {
-		print_voters_table(res["voters"].get_array());
-		/*
-                for( auto& row : res["voters"].get_array() ) {
-                    const auto& obj = row.get_object();
-
-                    std::cout << obj["account"].as_string()
-                              << "\t" << obj["weight"].as_string()
-			      << "\t" << obj["last_vote"].as_string()
-			      << std::endl;
-                } */
-            }
-        });
-    }
+         if ( print_as_json ) {
+            std::cout << fc::json::to_pretty_string(res) << std::endl;
+         } else {
+            print_voters_table(res["voters"].get_array());
+         }
+      });
+   }
 };
 
 CLI::callback_t header_opt_callback = [](CLI::results_t res) {
