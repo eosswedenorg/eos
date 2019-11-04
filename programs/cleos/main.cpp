@@ -2695,8 +2695,8 @@ struct get_voters_subcommand {
    get_voters_subcommand(CLI::App* app) {
       auto cmd =app->add_subcommand("voters", localized("Retrieve voters for an producer"), false);
       cmd->add_option("producer", producer, localized("filter by voted producer (comma separated)"));
-      cmd->add_option("skip", skip, localized("skip [n] actions (pagination)"));
-      cmd->add_option("limit", limit, localized("limit of [n] actions per page"));
+      cmd->add_option("-s,--skip", skip, localized("skip [n] actions (pagination)"));
+      cmd->add_option("-l,--limit", limit, localized("limit of [n] actions per page"));
       cmd->add_flag("-j,--json", print_as_json, localized("print result as json"));
 
       cmd->set_callback([this] {
