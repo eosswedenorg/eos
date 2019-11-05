@@ -12,8 +12,9 @@ mkdir -p ${EOS_PREFIX}/licenses/eosio
 #mkdir -p ${EOS_PREFIX}/cmake
 #mkdir -p ${EOS_PREFIX}/scripts
 
-# install binaries 
-cp -R ${BUILD_DIR}/bin/* ${EOS_PREFIX}/bin  || exit 1
+# install binaries
+cp ${BUILD_DIR}/bin/cleos-v2 ${EOS_PREFIX}/bin  || exit 1
+cp ${BUILD_DIR}/bin/keosd ${EOS_PREFIX}/bin  || exit 1
 
 # install licenses
 cp -R ${BUILD_DIR}/licenses/eosio/* ${EOS_PREFIX}/licenses || exit 1
